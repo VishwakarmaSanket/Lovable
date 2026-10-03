@@ -1,105 +1,152 @@
-# Capstone Microservices System
+# Loveable
 
-A multi-service microservices architecture featuring an isolated Sandbox execution engine, AI Orchestration, Authentication, and Notification services managed with Docker and Kubernetes.
+> An evolving AI-powered developer environment for generating, editing, and running applications inside isolated sandboxes.
 
----
+## Overview
 
-## 📁 Repository Structure
+Loveable explores how an AI-assisted development environment can safely create and modify applications inside isolated execution environments.
 
+The project is being built incrementally. The current implementation focuses on the **sandbox and infrastructure foundation**, while AI orchestration, authentication, routing, and related services evolve alongside it.
+
+```text
+User
+  │
+  ▼
+Application / AI Layer
+  │
+  ▼
+Sandbox Management
+  │
+  ▼
+Kubernetes
+  │
+  ▼
+Isolated Vite Environment
+  │
+  ▼
+Preview / Execution
 ```
-├── ai-orchestration/    # AI agent orchestration service
-├── auth/                # User authentication & identity management service
-├── notification/        # Real-time and background notification service
-├── k8s/                 # Kubernetes manifests (Deployments, Services, RBAC, Ingress)
-│   ├── ingress.yml
-│   ├── sandbox-deployment.yml
-│   ├── sandbox-rbac.yml
-│   └── sandbox-service.yml
-├── sandbox/             # Dynamic code sandbox environment management
-│   ├── server/          # Express.js backend for managing K8s sandbox pods
-│   └── template/        # React 19 + Vite frontend sandbox template
-├── .gitignore           # Git ignore configuration
-└── README.md            # Project documentation
+
+## Current Architecture
+
+| Component | Responsibility |
+|---|---|
+| `sandbox/server` | Creates and manages isolated sandbox environments through the Kubernetes API |
+| `sandbox/template` | React + Vite application template used inside sandbox environments |
+| `sandbox/agent` | Agent-side execution capabilities within a sandbox |
+| `sandbox/router` | Routes preview and agent traffic to the appropriate sandbox |
+| `ai-orchestration` | Runs AI workflows and agent logic using LangGraph |
+| `auth` | Handles authentication and Google OAuth flow |
+| `k8s` | Kubernetes manifests, services, ingress, and RBAC configuration |
+| `skaffold.yml` | Coordinates image builds, file sync, and Kubernetes deployment |
+
+## Key Ideas
+
+### Isolated execution
+
+Generated application code should run in an isolated environment rather than inside the main application process. Sandboxes separate application execution from the control plane.
+
+### Dynamic environments
+
+The sandbox service communicates with Kubernetes to provision and manage application environments dynamically instead of treating a single local process as the runtime.
+
+### AI orchestration
+
+The AI layer is separated from sandbox management so agent workflows can reason about code and tools without coupling orchestration logic directly to the execution environment.
+
+### Preview routing
+
+Preview and agent traffic are routed through dedicated paths so individual sandbox environments can be reached without exposing their internal runtime directly.
+
+## Tech Stack
+
+| Area | Technologies |
+|---|---|
+| **Frontend** | React, Vite |
+| **Backend** | Node.js, Express |
+| **AI** | LangChain, LangGraph, Mistral |
+| **Persistence** | MongoDB, Mongoose |
+| **Infrastructure** | Docker, Kubernetes, NGINX Ingress, Skaffold |
+| **Authentication** | JWT, Google OAuth 2.0 |
+
+## Repository Structure
+
+```text
+Loveable/
+├── ai-orchestration/
+├── auth/
+├── k8s/
+├── sandbox/
+│   ├── agent/
+│   ├── router/
+│   ├── server/
+│   └── template/
+├── docs/
+├── skaffold.yml
+└── README.md
 ```
 
----
-
-## 🚀 Services Overview
-
-### 1. **Sandbox Service (`/sandbox`)**
-* **Backend (`sandbox/server`):** Built with **Node.js, Express, Mongoose, and `@kubernetes/client-node`**. It dynamically manages isolated container environments in Kubernetes.
-* **Template (`sandbox/template`):** Built with **React 19, Vite, and ESLint**. Serves as the boilerplate template injected into sandbox environments.
-
-### 2. **Kubernetes Configuration (`/k8s`)**
-Contains production-ready K8s manifests:
-* `sandbox-deployment.yml`: Deployment manifest for the main sandbox container with resource limits and readiness/liveness health probes.
-* `sandbox-rbac.yml`: ServiceAccount (`sandbox-sa`) and RBAC permissions for the sandbox manager.
-* `sandbox-service.yml`: Kubernetes Service exposing the sandbox API.
-* `ingress.yml`: NGINX Ingress rules routing traffic across microservices.
-
-### 3. **Microservices (In Progress)**
-* `auth`: User authentication service.
-* `ai-orchestration`: AI agent workflow execution service.
-* `notification`: Push and email notification service.
-
----
-
-## ⚙️ Getting Started
+## Development
 
 ### Prerequisites
-* **Node.js:** `v18+` or `v20+`
-* **npm:** `v9+`
-* **Docker:** Installed and running
-* **Kubernetes:** `kubectl` with access to a cluster (Minikube / Kind / Docker Desktop)
 
----
+- Node.js 18+
+- npm 9+
+- Docker
+- Kubernetes
+- `kubectl`
+- Skaffold
 
-### Local Setup & Running Services
+### Sandbox server
 
-#### Running the Sandbox Server
 ```bash
 cd sandbox/server
 npm install
 npm run dev
 ```
-The server will start on port `3000` (or `process.env.PORT`).
 
-#### Running the Sandbox React Template
+### Sandbox template
+
 ```bash
 cd sandbox/template
 npm install
 npm run dev
 ```
-The frontend dev server will launch via Vite.
 
----
+### Kubernetes
 
-## 🐳 Kubernetes Deployment
+```bash
+kubectl apply -f k8s/rbac.yml
+kubectl apply -f k8s/sandbox-deployment.yml
+kubectl apply -f k8s/sandbox-service.yml
+kubectl apply -f k8s/ingress.yml
+```
 
-To deploy the Sandbox service to your local Kubernetes cluster:
+## Documentation
 
-1. **Apply ServiceAccount & RBAC:**
-   ```bash
-   kubectl apply -f k8s/sandbox-rbac.yml
-   ```
+Development notes and sandbox setup material live under [`docs/`](./docs).
 
-2. **Deploy the Sandbox Service & Deployment:**
-   ```bash
-   kubectl apply -f k8s/sandbox-deployment.yml
-   kubectl apply -f k8s/sandbox-service.yml
-   ```
+## Engineering Decisions
 
-3. **Apply Ingress Configuration:**
-   ```bash
-   kubectl apply -f k8s/ingress.yml
-   ```
+The repository is documented as the system evolves. Major architectural decisions are recorded alongside implementation so the project captures not only **what** was built, but **why** it was built that way.
 
-4. **Verify Deployment:**
-   ```bash
-   kubectl get pods -l app=sandbox
-   ```
+Current areas of exploration include:
 
----
+- sandbox isolation
+- Kubernetes-based provisioning
+- service boundaries
+- AI tool orchestration
+- preview routing
+- authentication
+- real-time communication
+- persistence and synchronization
 
-## 📝 License
+## Project Status
+
+**Active development**
+
+Features are being introduced incrementally, tested, documented, and integrated as the system evolves.
+
+## License
+
 ISC
